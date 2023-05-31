@@ -1,53 +1,43 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import com.fazecast.jSerialComm.*;
 
 public class ButtonExample {
     private static SerialPort serialPort;
 
     public static void main(String[] args) {
-        // Create a new JFrame
         JFrame frame = new JFrame("Button Example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Create a new JButton
         JButton button = new JButton("Send Command");
-
-        // Set the layout manager of the JFrame to a FlowLayout
-        frame.setLayout(new FlowLayout());
-
-        // Add the button to the JFrame
-        frame.add(button);
-
-        // Create a new ActionListener for the button
         button.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                // Handle button click event here
-                sendCommandToSerialPort("ttyUSB0", "YOUR_COMMAND_HERE");
+                String portName = "/dev/ttyUSB0";
+                String command = "YOUR_COMMAND_HERE";
+
+                if (serialPort != null && serialPort.isOpen()) {
+                    serialPort.writeBytes(command.getBytes(), command.length());
+                    System.out.println("Command sent: " + command);
+                } else {
+                    System.out.println("Serial port is not open.");
+                }
             }
         });
 
-        // Set the size of the JFrame and make it visible
-        frame.setSize(300, 200);
+        frame.getContentPane().add(button, BorderLayout.CENTER);
+        frame.pack();
         frame.setVisible(true);
-    }
 
-    public static void sendCommandToSerialPort(String portName, String command) {
+        String portName = "/dev/ttyUSB0";
+        int baudRate = 9600;
         serialPort = SerialPort.getCommPort(portName);
-        serialPort.setComPortParameters(9600, 8, 1, SerialPort.NO_PARITY);
-        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
+        serialPort.setBaudRate(baudRate);
 
         if (serialPort.openPort()) {
-            try {
-                byte[] commandBytes = command.getBytes();
-                serialPort.getOutputStream().write(commandBytes);
-                System.out.println("Command sent: " + command);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                serialPort.closePort();
-            }
+            System.out.println("Serial port opened successfully.");
         } else {
             System.out.println("Failed to open serial port.");
         }
